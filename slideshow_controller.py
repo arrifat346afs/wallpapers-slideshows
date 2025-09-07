@@ -1,7 +1,6 @@
 import sys
 import os
 import subprocess
-import json
 from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt, QTimer, QThread, QObject, Signal
 from PySide6.QtGui import QPixmap
@@ -9,8 +8,6 @@ from PySide6.QtGui import QPixmap
 # Worker thread for running one-shot commands without blocking the GUI
 class CommandWorker(QObject):
     finished = Signal()
-    stats_ready = Signal(dict)
-    command_done = Signal()
 
     def __init__(self, script_path, command):
         super().__init__()
@@ -20,13 +17,7 @@ class CommandWorker(QObject):
     def run(self):
         print(f"Worker sending command: {self.command}")
         try:
-            if self.command == "stats":
-                result = subprocess.run(["python3", self.script_path, self.command], capture_output=True, text=True, timeout=10)
-                stats = json.loads(result.stdout)
-                self.stats_ready.emit(stats)
-            else:
-                subprocess.run(["python3", self.script_path, self.command], timeout=10)
-                self.command_done.emit()
+            subprocess.run(["python3", self.script_path, self.command], timeout=10)
         except Exception as e:
             print(f"Error in worker for command '{self.command}': {e}")
         self.finished.emit()
@@ -40,7 +31,6 @@ class SlideshowControl(QWidget):
         self.current_displayed_path = None
         self.command_thread = None
         self.command_worker = None
-        self.is_running_command = False
 
         self.initUI()
         self.init_timer()
@@ -72,19 +62,7 @@ class SlideshowControl(QWidget):
         self.image_preview_label.setMinimumSize(400, 225)
         self.main_layout.addWidget(self.image_preview_label)
 
-        self.stats_layout = QHBoxLayout()
-        self.main_layout.addLayout(self.stats_layout)
-
-        self.total_label = QLabel("Total: -")
-        self.stats_layout.addWidget(self.total_label)
-
-        self.used_label = QLabel("Used: -")
-        self.stats_layout.addWidget(self.used_label)
-
-        self.remaining_label = QLabel("Remaining: -")
-        self.stats_layout.addWidget(self.remaining_label)
-
-        self.setFixedSize(450, 350)
+        self.setFixedSize(450, 300)
 
     def init_timer(self):
         self.timer = QTimer(self)
@@ -108,8 +86,6 @@ class SlideshowControl(QWidget):
             if new_path and new_path != self.current_displayed_path:
                 self.current_displayed_path = new_path
                 self.update_display(new_path)
-            
-            self.run_command("stats")
 
         except Exception as e:
             self.filename_label.setText(f"Error reading state file: {e}")
@@ -123,35 +99,15 @@ class SlideshowControl(QWidget):
         else:
             self.image_preview_label.setText("Cannot load image preview.")
 
-    def update_stats(self, stats):
-        self.total_label.setText(f"Total: {stats['total']}")
-        self.used_label.setText(f"Used: {stats['used']}")
-        self.remaining_label.setText(f"Remaining: {stats['remaining']}")
-
     def run_command(self, command):
-        if self.is_running_command:
-            return
-
-        self.is_running_command = True
         self.command_thread = QThread()
         self.command_worker = CommandWorker(self.script_path, command)
         self.command_worker.moveToThread(self.command_thread)
         self.command_thread.started.connect(self.command_worker.run)
-
-        if command == "stats":
-            self.command_worker.stats_ready.connect(self.update_stats)
-        else:
-            self.command_worker.command_done.connect(self.check_for_update)
-
         self.command_worker.finished.connect(self.command_thread.quit)
         self.command_worker.finished.connect(self.command_worker.deleteLater)
         self.command_thread.finished.connect(self.command_thread.deleteLater)
-        self.command_worker.finished.connect(lambda: self.set_is_running_command(False))
-
         self.command_thread.start()
-
-    def set_is_running_command(self, is_running):
-        self.is_running_command = is_running
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_P:
