@@ -17,7 +17,7 @@ This project requires the following dependencies:
 2.  **Install PySide6:**
     Use `yay` to install the `pyside6` package from the Arch User Repository (AUR):
     ```bash
-    yay -Syu pyside6
+    yay -S pyside6
     ```
 
 ## Usage
@@ -25,7 +25,7 @@ This project requires the following dependencies:
 To run the application, execute the `gui.py` script:
 
 ```bash
-python3 gui.py
+python gui.py
 ```
 
 The GUI will allow you to control the wallpaper slideshow.
