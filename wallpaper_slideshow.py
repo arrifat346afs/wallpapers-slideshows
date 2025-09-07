@@ -112,6 +112,21 @@ def handle_command(command):
             with open(CURRENT_WALLPAPER_FILE, "r") as f:
                 # Print in the same format as a normal change for consistency
                 print(f"🎨 Setting wallpaper: {f.read().strip()}")
+    elif command == "stats":
+        wallpapers = get_wallpapers(WALLPAPER_DIR)
+        history = load_history()
+        used_wallpapers = set(history.get("used", []))
+        
+        total_images = len(wallpapers)
+        used_images = len(used_wallpapers)
+        remaining_images = total_images - used_images
+        
+        stats = {
+            "total": total_images,
+            "used": used_images,
+            "remaining": remaining_images
+        }
+        print(json.dumps(stats))
     else:
         print(f"❓ Unknown command: {command}")
 

@@ -1,6 +1,7 @@
 import sys
 import os
 import subprocess
+import json
 from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt, QTimer, QThread, QObject, Signal
 from PySide6.QtGui import QPixmap
@@ -8,6 +9,7 @@ from PySide6.QtGui import QPixmap
 # Worker thread for running one-shot commands without blocking the GUI
 class CommandWorker(QObject):
     finished = Signal()
+    stats_ready = Signal(dict)
 
     def __init__(self, script_path, command):
         super().__init__()
@@ -17,7 +19,12 @@ class CommandWorker(QObject):
     def run(self):
         print(f"Worker sending command: {self.command}")
         try:
-            subprocess.run(["python3", self.script_path, self.command], timeout=10)
+            if self.command == "stats":
+                result = subprocess.run(["python3", self.script_path, self.command], capture_output=True, text=True, timeout=10)
+                stats = json.loads(result.stdout)
+                self.stats_ready.emit(stats)
+            else:
+                subprocess.run(["python3", self.script_path, self.command], timeout=10)
         except Exception as e:
             print(f"Error in worker for command '{self.command}': {e}")
         self.finished.emit()
@@ -25,7 +32,7 @@ class CommandWorker(QObject):
 class SlideshowControl(QWidget):
     def __init__(self):
         super().__init__()
-        self.script_path = os.path.join(os.path.dirname(__file__), "sw.py")
+        self.script_path = os.path.join(os.path.dirname(__file__), "wallpaper_slideshow.py")
         self.current_wallpaper_file = os.path.expanduser("~/.cache/current_wallpaper.txt")
         
         self.current_displayed_path = None
@@ -62,7 +69,19 @@ class SlideshowControl(QWidget):
         self.image_preview_label.setMinimumSize(400, 225)
         self.main_layout.addWidget(self.image_preview_label)
 
-        self.setFixedSize(450, 300)
+        self.stats_layout = QHBoxLayout()
+        self.main_layout.addLayout(self.stats_layout)
+
+        self.total_label = QLabel("Total: -")
+        self.stats_layout.addWidget(self.total_label)
+
+        self.used_label = QLabel("Used: -")
+        self.stats_layout.addWidget(self.used_label)
+
+        self.remaining_label = QLabel("Remaining: -")
+        self.stats_layout.addWidget(self.remaining_label)
+
+        self.setFixedSize(450, 350)
 
     def init_timer(self):
         self.timer = QTimer(self)
@@ -86,6 +105,8 @@ class SlideshowControl(QWidget):
             if new_path and new_path != self.current_displayed_path:
                 self.current_displayed_path = new_path
                 self.update_display(new_path)
+            
+            self.run_command("stats")
 
         except Exception as e:
             self.filename_label.setText(f"Error reading state file: {e}")
@@ -99,11 +120,18 @@ class SlideshowControl(QWidget):
         else:
             self.image_preview_label.setText("Cannot load image preview.")
 
+    def update_stats(self, stats):
+        self.total_label.setText(f"Total: {stats['total']}")
+        self.used_label.setText(f"Used: {stats['used']}")
+        self.remaining_label.setText(f"Remaining: {stats['remaining']}")
+
     def run_command(self, command):
         self.command_thread = QThread()
         self.command_worker = CommandWorker(self.script_path, command)
         self.command_worker.moveToThread(self.command_thread)
         self.command_thread.started.connect(self.command_worker.run)
+        if command == "stats":
+            self.command_worker.stats_ready.connect(self.update_stats)
         self.command_worker.finished.connect(self.command_thread.quit)
         self.command_worker.finished.connect(self.command_worker.deleteLater)
         self.command_thread.finished.connect(self.command_thread.deleteLater)
