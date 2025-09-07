@@ -132,6 +132,8 @@ class SlideshowControl(QWidget):
         self.command_thread.started.connect(self.command_worker.run)
         if command == "stats":
             self.command_worker.stats_ready.connect(self.update_stats)
+        else:
+            self.command_worker.finished.connect(self.check_for_update)
         self.command_worker.finished.connect(self.command_thread.quit)
         self.command_worker.finished.connect(self.command_worker.deleteLater)
         self.command_thread.finished.connect(self.command_thread.deleteLater)
