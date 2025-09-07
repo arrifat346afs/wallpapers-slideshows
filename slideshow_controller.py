@@ -40,6 +40,7 @@ class SlideshowControl(QWidget):
         self.current_displayed_path = None
         self.command_thread = None
         self.command_worker = None
+        self.is_running_command = False
 
         self.initUI()
         self.init_timer()
@@ -128,18 +129,29 @@ class SlideshowControl(QWidget):
         self.remaining_label.setText(f"Remaining: {stats['remaining']}")
 
     def run_command(self, command):
+        if self.is_running_command:
+            return
+
+        self.is_running_command = True
         self.command_thread = QThread()
         self.command_worker = CommandWorker(self.script_path, command)
         self.command_worker.moveToThread(self.command_thread)
         self.command_thread.started.connect(self.command_worker.run)
+
         if command == "stats":
             self.command_worker.stats_ready.connect(self.update_stats)
         else:
             self.command_worker.command_done.connect(self.check_for_update)
+
         self.command_worker.finished.connect(self.command_thread.quit)
         self.command_worker.finished.connect(self.command_worker.deleteLater)
         self.command_thread.finished.connect(self.command_thread.deleteLater)
+        self.command_worker.finished.connect(lambda: self.set_is_running_command(False))
+
         self.command_thread.start()
+
+    def set_is_running_command(self, is_running):
+        self.is_running_command = is_running
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_P:
