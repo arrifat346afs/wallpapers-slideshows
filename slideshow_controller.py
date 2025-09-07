@@ -10,6 +10,7 @@ from PySide6.QtGui import QPixmap
 class CommandWorker(QObject):
     finished = Signal()
     stats_ready = Signal(dict)
+    command_done = Signal()
 
     def __init__(self, script_path, command):
         super().__init__()
@@ -25,6 +26,7 @@ class CommandWorker(QObject):
                 self.stats_ready.emit(stats)
             else:
                 subprocess.run(["python3", self.script_path, self.command], timeout=10)
+                self.command_done.emit()
         except Exception as e:
             print(f"Error in worker for command '{self.command}': {e}")
         self.finished.emit()
@@ -133,7 +135,7 @@ class SlideshowControl(QWidget):
         if command == "stats":
             self.command_worker.stats_ready.connect(self.update_stats)
         else:
-            self.command_worker.finished.connect(self.check_for_update)
+            self.command_worker.command_done.connect(self.check_for_update)
         self.command_worker.finished.connect(self.command_thread.quit)
         self.command_worker.finished.connect(self.command_worker.deleteLater)
         self.command_thread.finished.connect(self.command_thread.deleteLater)
