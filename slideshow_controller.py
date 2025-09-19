@@ -110,12 +110,13 @@ class SlideshowControl(QWidget):
         self.command_thread.start()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_P:
-            self.run_command("previous")
-        elif event.key() == Qt.Key_N:
-            self.run_command("next")
-        elif event.key() == Qt.Key_Space:
-            self.run_command("pause")
+        match event.key():
+            case Qt.Key_P:
+                self.run_command("previous")
+            case Qt.Key_N:
+                self.run_command("next")
+            case Qt.Key_Space:
+                self.run_command("pause")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

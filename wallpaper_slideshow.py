@@ -7,10 +7,10 @@ import json
 import time
 
 # ✅ Set your wallpaper directory here
-WALLPAPER_DIR = "/home/rifat/Pictures/wallpaper/"
+WALLPAPER_DIR = os.path.expanduser("~/Pictures/wallpaper/")
 
 # Path to your wallpaper switching script
-WALL_SCRIPT = "/home/rifat/.config/quickshell/ii/scripts/colors/switchwall.sh"
+WALL_SCRIPT = os.path.expanduser("~/.config/quickshell/ii/scripts/colors/switchwall.sh")
 
 # File to keep track of already used wallpapers
 HISTORY_FILE = os.path.expanduser("~/.cache/wallpaper_history.json")
@@ -93,27 +93,27 @@ def main():
 PAUSE_FILE = os.path.expanduser("~/.cache/slideshow.paused")
 
 def handle_command(command):
-    if command == "next":
-        set_random_wallpaper()
-    elif command == "previous":
-        # With the current history implementation, "previous" is the same as "next"
-        print("Setting another random wallpaper for 'previous' command.")
-        set_random_wallpaper()
-    elif command == "pause":
-        if os.path.exists(PAUSE_FILE):
-            os.remove(PAUSE_FILE)
-            print("▶️ Resumed slideshow.")
-        else:
-            with open(PAUSE_FILE, "w") as f:
-                f.write("")
-            print("⏸ Paused slideshow.")
-    elif command == "current":
-        if os.path.exists(CURRENT_WALLPAPER_FILE):
-            with open(CURRENT_WALLPAPER_FILE, "r") as f:
-                # Print in the same format as a normal change for consistency
-                print(f"🎨 Setting wallpaper: {f.read().strip()}")
-    else:
-        print(f"❓ Unknown command: {command}")
+    match command:
+        case "next" | "previous":
+            # With the current history implementation, "previous" is the same as "next"
+            if command == "previous":
+                print("Setting another random wallpaper for 'previous' command.")
+            set_random_wallpaper()
+        case "pause":
+            if os.path.exists(PAUSE_FILE):
+                os.remove(PAUSE_FILE)
+                print("▶️ Resumed slideshow.")
+            else:
+                with open(PAUSE_FILE, "w") as f:
+                    f.write("")
+                print("⏸ Paused slideshow.")
+        case "current":
+            if os.path.exists(CURRENT_WALLPAPER_FILE):
+                with open(CURRENT_WALLPAPER_FILE, "r") as f:
+                    # Print in the same format as a normal change for consistency
+                    print(f"🎨 Setting wallpaper: {f.read().strip()}")
+        case _:
+            print(f"❓ Unknown command: {command}")
 
 if __name__ == "__main__":
     main()

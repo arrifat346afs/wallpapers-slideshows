@@ -22,10 +22,10 @@ This project requires the following dependencies:
 
 ## Usage
 
-To run the application, execute the `gui.py` script:
+To run the application, execute the `slideshow_controller.py` script:
 
 ```bash
-python gui.py
+python slideshow_controller.py
 ```
 
 The GUI will allow you to control the wallpaper slideshow.
@@ -36,16 +36,16 @@ To use this application with Hyprland, you need to configure it to autostart the
 
 1.  **Autostart the slideshow script:**
 
-    Add the following line to your `hyprland.conf` file, replacing `path/to/your` with the actual path to the `sw.py` script:
+    Add the following line to your `hyprland.conf` file, replacing `path/to/your` with the actual path to the `wallpaper_slideshow.py` script:
 
     ```
-    exec-once = python path/to/your/sw.py
+    exec-once = python path/to/your/wallpaper_slideshow.py
     ```
 
 2.  **Set a keybinding for the GUI:**
 
-    Add the following line to your `hyprland.conf` file, replacing `path/to/your` with the actual path to the `gui.py` script:
+    Add the following line to your `hyprland.conf` file, replacing `path/to/your` with the actual path to the `slideshow_controller.py` script:
 
     ```
-    bind = Super+Shift, W, exec, python path/to/your/gui.py
+    bind = Super+Shift, W, exec, python path/to/your/slideshow_controller.py
     ```
