@@ -16,7 +16,7 @@ WALL_SCRIPT = os.path.expanduser("~/.config/quickshell/ii/scripts/colors/switchw
 HISTORY_FILE = os.path.expanduser("~/.cache/wallpaper_history.json")
 
 # Interval in seconds (e.g., 300 = 5 minutes)
-INTERVAL = 300  
+INTERVAL = 900  
 
 # File to store the path of the current wallpaper
 CURRENT_WALLPAPER_FILE = os.path.expanduser("~/.cache/current_wallpaper.txt")  
