@@ -7,7 +7,7 @@ import json
 import time
 
 # ✅ Set your wallpaper directory here
-WALLPAPER_DIR = os.path.expanduser("")
+WALLPAPER_DIR = os.path.expanduser("~/Pictures/Wallpaer/")
 
 # Path to your wallpaper switching script
 WALL_SCRIPT = os.path.expanduser("~/.config/quickshell/ii/scripts/colors/switchwall.sh")
